@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>歯科予約</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mint:#00C896; --mint-d:#009E78; --mint-l:#E6FAF5; --mint-m:#B3F0E0;
+  --ink:#0D1F1A; --ink2:#3D5249; --ink3:#7A9389;
+  --bg:#F4FAF8; --white:#FFFFFF; --bd:#DCF0EA;
+  --red:#FF5252; --red-l:#FFF0F0;
+  --amber:#FFB830; --amber-l:#FFF8E6;
+  --r:14px; --rs:10px;
+  --sh:0 2px 12px rgba(13,31,26,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:80px}
+
+/* HEADER */
+.hdr{background:var(--white);border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--sh)}
+.hdr-logo{display:flex;align-items:center;gap:8px}
+.hdr-icon{width:34px;height:34px;background:var(--mint);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.hdr-icon svg{width:18px;height:18px}
+.hdr-title{font-size:15px;font-weight:700}
+.hdr-sub{font-size:10px;color:var(--ink3)}
+.hdr-nav{display:flex;gap:6px}
+.nav-btn-sm{background:none;border:1px solid var(--bd);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:500;color:var(--ink2);font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:3px;transition:all 0.2s}
+.nav-btn-sm.active{background:var(--mint);border-color:var(--mint);color:white}
+.nav-btn-sm svg{width:13px;height:13px}
+
+/* STEPS */
+.steps-bar{padding:16px 16px 0}
+.steps{display:flex;align-items:center;background:var(--white);border-radius:var(--r);padding:12px 16px;border:1px solid var(--bd);box-shadow:var(--sh)}
+.step{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;right:-50%;top:12px;width:100%;height:2px;background:var(--bd);z-index:0;transition:background 0.4s}
+.step.done:not(:last-child)::after{background:var(--mint)}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--bd);color:var(--ink3);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;transition:all 0.3s}
+.step.active .step-num{background:var(--mint);color:white;box-shadow:0 0 0 4px var(--mint-l)}
+.step.done .step-num{background:var(--mint);color:white}
+.step-lbl{font-size:10px;color:var(--ink3);font-weight:500;white-space:nowrap}
+.step.active .step-lbl{color:var(--mint-d);font-weight:700}
+.step.done .step-lbl{color:var(--mint-d)}
+
+/* PANELS */
+.panel{display:none;padding:16px;animation:fadeUp 0.3s ease}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ptitle{font-size:17px;font-weight:700;margin-bottom:4px}
+.psub{font-size:12px;color:var(--ink3);margin-bottom:16px;line-height:1.6}
+
+/* FORM */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:5px;letter-spacing:0.04em}
+.req{background:var(--red);color:white;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border:1.5px solid var(--bd);border-radius:var(--rs);font-family:inherit;font-size:15px;color:var(--ink);background:var(--white);outline:none;transition:border-color 0.2s,box-shadow 0.2s;-webkit-appearance:none;appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--mint);box-shadow:0 0 0 3px var(--mint-l)}
+.field input::placeholder{color:var(--ink3);font-size:13px}
+
+/* TREATMENT CARDS */
+.t-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
+.t-card{background:var(--white);border:2px solid var(--bd);border-radius:var(--r);padding:13px 10px;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+.t-card:active{transform:scale(0.97)}
+.t-card.sel{border-color:var(--mint);background:var(--mint-l)}
+.t-icon{width:42px;height:42px;border-radius:11px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:20px;transition:background 0.2s}
+.t-card.sel .t-icon{background:var(--mint-m)}
+.t-name{font-size:12px;font-weight:700;color:var(--ink);line-height:1.3}
+.t-time{font-size:11px;color:var(--ink3)}
+
+/* CALENDAR */
+.cal-outer{border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:12px;border:1px solid #D0D0D0}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;background:#3DAA3D;padding:12px 16px;color:white}
+.cal-wk{font-size:14px;font-weight:700;letter-spacing:0.03em}
+.cal-arr{background:none;border:none;color:white;width:32px;height:32px;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;opacity:0.9}
+.cal-arr:active{opacity:0.5}
+.cal-wrap{background:#fff;overflow-x:auto}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+
+/* ── 曜日行 ── */
+thead tr.row-day th{padding:7px 2px 5px;text-align:center;font-size:13px;font-weight:700;border:1px solid #D8D8D8}
+thead tr.row-day th:first-child{background:#EBEBEB;border-color:#D0D0D0;width:50px}
+
+/* ── 日付行 ── */
+thead tr.row-date th{padding:4px 2px 7px;text-align:center;font-size:15px;font-weight:700;border:1px solid #D8D8D8;border-top:none}
+thead tr.row-date th:first-child{background:#EBEBEB;border-color:#D0D0D0}
+
+/* 土曜 */
+.th-sat-day,.th-sat-dt{background:#D8EEFF;color:#1A66DD}
+/* 日祝：ピンクベース・赤文字 */
+.th-sun-day,.th-hol-day,.th-sun-dt,.th-hol-dt{background:#FFCCCC !important;color:#CC0000 !important;font-weight:700}
+/* 平日 */
+.th-wd-day,.th-wd-dt{background:#F0F0F0;color:#333}
+/* 休診（木など）*/
+.th-cls-day,.th-cls-dt{background:#DCDCDC;color:#AAA}
+
+/* ── 午前午後区切り行 ── */
+tr.row-break td{height:10px;padding:0;background:#D0D0D0;border:1px solid #C0C0C0}
+tr.row-break td:first-child{background:#C8C8C8;border-color:#B8B8B8}
+
+/* ── tbody ── */
+tbody tr td{height:48px;padding:0;border:1px solid #D8D8D8;text-align:center;vertical-align:middle}
+tbody tr td:first-child{background:#F0F0F0;font-size:11px;font-weight:700;color:#444;width:50px;border-color:#C8C8C8;white-space:nowrap;padding:0 2px}
+
+/* 診察外・休診・過去 → グレー矩形 */
+.cell-off{background:#E4E4E4}
+/* 診察時間・空き → 白背景 */
+.cell-on{background:#FFFFFF}
+/* 土曜空き */
+.cell-on-sat{background:#F6FAFF}
+
+/* ── スロットボタン ── */
+.slot{width:100%;height:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+
+/* 空き：緑の太い輪郭丸 */
+.slot.av .circle{width:30px;height:30px;border-radius:50%;border:3px solid #2EAA2E;background:transparent;display:block;transition:background 0.12s,transform 0.12s}
+.slot.av:active .circle{background:#C8EEC8;transform:scale(0.88)}
+
+/* 予約済み：黒× */
+.slot.tk{cursor:not-allowed;font-size:22px;font-weight:700;color:#222;line-height:1}
+
+/* 診察外・過去：表示なし（セル背景がグレー） */
+.slot.ps,.slot.na{cursor:default}
+
+/* 選択中：緑塗り丸＋白チェック */
+.slot.sl .circle{width:30px;height:30px;border-radius:50%;background:#2EAA2E;border:3px solid #2EAA2E;display:flex;align-items:center;justify-content:center;color:white;font-size:15px;font-weight:700;line-height:1}
+
+/* ── 凡例 ── */
+.legend{display:flex;gap:16px;justify-content:center;font-size:12px;color:#444;padding:8px 0 14px;font-weight:500;align-items:center}
+.leg-i{display:flex;align-items:center;gap:6px}
+.leg-circle-o{width:20px;height:20px;border-radius:50%;border:3px solid #2EAA2E;background:transparent;flex-shrink:0;display:inline-block}
+.leg-circle-f{width:20px;height:20px;border-radius:50%;background:#2EAA2E;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700;line-height:1}
+.leg-sym{font-size:18px;font-weight:700;line-height:1;color:#222}
+
+/* SUMMARY */
+.sum-card{background:var(--white);border:1.5px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:14px;box-shadow:var(--sh)}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bg);font-size:13px}
+.sum-row:last-child{border-bottom:none}
+.sl{color:var(--ink3);font-size:12px}
+.sv{font-weight:700;color:var(--ink);font-size:13px}
+.hl-box{background:var(--mint-l);border:1.5px solid var(--mint);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.hl-ic{width:34px;height:34px;border-radius:50%;background:var(--mint);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+
+/* BUTTONS */
+.btn-p{width:100%;padding:14px;background:var(--mint);color:white;border:none;border-radius:var(--r);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:7px;letter-spacing:0.03em}
+.btn-p:active{background:var(--mint-d);transform:scale(0.98)}
+.btn-p:disabled{background:#C5E8E0;cursor:not-allowed;transform:none}
+.btn-s{width:100%;padding:12px;background:var(--white);color:var(--ink2);border:1.5px solid var(--bd);border-radius:var(--r);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:9px;transition:all 0.2s}
+.btn-s:active{background:var(--bg)}
+.btn-row{display:flex;gap:9px;margin-top:9px}
+.btn-row .btn-s{margin-top:0;flex:1}
+.btn-danger{width:100%;padding:12px;background:var(--red-l);color:var(--red);border:1.5px solid #FFBBBB;border-radius:var(--r);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:9px;transition:all 0.2s}
+.btn-danger:active{background:#FFE0E0}
+
+/* SELECTED BAR */
+.sel-bar{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--bd);padding:11px 16px;display:none;align-items:center;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,0.08);z-index:100}
+.sel-bar.vis{display:flex}
+.sel-d{font-size:14px;font-weight:700}
+.sel-sub{font-size:11px;color:var(--ink3)}
+.sel-go{background:var(--mint);color:white;border:none;border-radius:20px;padding:10px 18px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
+
+/* COMPLETE */
+.done-wrap{text-align:center;padding:36px 16px 20px}
+.done-ic{width:76px;height:76px;background:var(--mint);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.done-ic svg{width:38px;height:38px}
+.done-title{font-size:21px;font-weight:700;margin-bottom:7px}
+.done-sub{font-size:13px;color:var(--ink3);line-height:1.7;margin-bottom:22px}
+.rsv-id{background:var(--mint-l);border:1px solid var(--mint-m);border-radius:var(--rs);padding:9px 18px;display:inline-block;font-size:13px;color:var(--mint-d);margin-bottom:22px;font-weight:700;letter-spacing:0.05em}
+
+/* CANCEL/CHANGE PANEL */
+.rsv-lookup{background:var(--white);border:1.5px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:14px;box-shadow:var(--sh)}
+.status-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+.sb-ok{background:var(--mint-l);color:var(--mint-d)}
+.sb-cancel{background:var(--red-l);color:var(--red)}
+.sb-done{background:#F0F0F0;color:#999}
+
+/* HISTORY */
+.hist-item{background:var(--white);border:1px solid var(--bd);border-radius:var(--r);padding:13px 14px;margin-bottom:9px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:all 0.2s}
+.hist-item:active{background:var(--bg)}
+.hist-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hist-dot.ok{background:var(--mint)}
+.hist-dot.cx{background:var(--red)}
+.hist-dot.dn{background:#CCC}
+.hist-body{flex:1}
+.hist-date{font-size:13px;font-weight:700}
+.hist-treat{font-size:11px;color:var(--ink3);margin-top:1px}
+.hist-rsv{font-size:10px;color:var(--ink3)}
+
+/* SECTION TABS */
+.tabs{display:flex;background:var(--white);border-bottom:1px solid var(--bd);position:sticky;top:57px;z-index:150}
+.tab{flex:1;padding:12px 6px;text-align:center;font-size:12px;font-weight:500;color:var(--ink3);border-bottom:2px solid transparent;cursor:pointer;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.tab.active{color:var(--mint);border-bottom-color:var(--mint);font-weight:700}
+
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink);color:white;padding:9px 18px;border-radius:20px;font-size:12px;font-weight:500;transition:transform 0.3s ease;z-index:9999;white-space:nowrap;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* LOADING */
+.lov{position:fixed;inset:0;background:rgba(244,250,248,0.88);z-index:9000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:13px}
+.lov.show{display:flex}
+.spin{width:38px;height:38px;border:3px solid var(--mint-m);border-top-color:var(--mint);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-t{font-size:12px;color:var(--ink2);font-weight:500}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--bd);margin:14px 0}
+.info-note{background:var(--amber-l);border:1px solid #FFDA80;border-radius:var(--rs);padding:10px 12px;font-size:12px;color:#7A5800;margin-bottom:14px;line-height:1.6}
+.info-note strong{font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+        <path d="M12 2C8 2 5 5 5 8c0 4 3 6 4 10h6c1-4 4-6 4-10 0-3-3-6-7-6z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="hdr-title">歯科予約</div>
+      <div class="hdr-sub">24時間オンライン受付</div>
+    </div>
+  </div>
+  <div class="hdr-nav">
+    <button class="nav-btn-sm active" id="navBook" onclick="showSection('book')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      予約
+    </button>
+    <button class="nav-btn-sm" id="navChange" onclick="showSection('change')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      変更/取消
+    </button>
+    <button class="nav-btn-sm" id="navHist" onclick="showSection('hist')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      履歴
+    </button>
+  </div>
+</header>
+
+<!-- ========== BOOKING SECTION ========== -->
+<div id="secBook">
+  <div class="steps-bar" id="stepsBar">
+    <div class="steps">
+      <div class="step active" id="st1"><div class="step-num">1</div><div class="step-lbl">お名前</div></div>
+      <div class="step" id="st2"><div class="step-num">2</div><div class="step-lbl">診察内容</div></div>
+      <div class="step" id="st3"><div class="step-num">3</div><div class="step-lbl">日時</div></div>
+      <div class="step" id="st4"><div class="step-num">4</div><div class="step-lbl">確認</div></div>
+    </div>
+  </div>
+
+  <!-- STEP1: 名前 -->
+  <div class="panel active" id="p1">
+    <div class="ptitle">お名前を入力してください</div>
+    <div class="psub">ご予約はLINEアカウントと紐付けて管理されます。</div>
+    <div class="field"><label>お名前<span class="req">必須</span></label><input type="text" id="iName" placeholder="例：山田 太郎" autocomplete="name"></div>
+    <div class="field"><label>フリガナ<span class="req">必須</span></label><input type="text" id="iKana" placeholder="例：ヤマダ タロウ"></div>
+    <div class="field"><label>電話番号<span class="req">必須</span></label><input type="tel" id="iPhone" placeholder="例：090-1234-5678" autocomplete="tel" inputmode="tel"></div>
+    <div class="field"><label>初診・再診</label>
+      <select id="iVisit">
+        <option value="再診">再診（以前に受診したことがある）</option>
+        <option value="初診">初診（はじめての受診）</option>
+      </select>
+    </div>
+    <button class="btn-p" onclick="toS2()">次へ：診察内容を選ぶ <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+  </div>
+
+  <!-- STEP2: 診察内容 -->
+  <div class="panel" id="p2">
+    <div class="ptitle">診察内容を選んでください</div>
+    <div class="psub">複数ある場合は主な症状・目的をお選びください。</div>
+    <div class="t-grid">
+      <div class="t-card" onclick="pickTx(this,'定期検診・クリーニング','30〜45分')"><div class="t-icon">🦷</div><div class="t-name">定期検診<br>クリーニング</div><div class="t-time">30〜45分</div></div>
+      <div class="t-card" onclick="pickTx(this,'虫歯の治療','30〜60分')"><div class="t-icon">🔧</div><div class="t-name">虫歯の治療</div><div class="t-time">30〜60分</div></div>
+      <div class="t-card" onclick="pickTx(this,'歯周病の治療','45〜60分')"><div class="t-icon">🩺</div><div class="t-name">歯周病の治療</div><div class="t-time">45〜60分</div></div>
+      <div class="t-card" onclick="pickTx(this,'ホワイトニング','60〜90分')"><div class="t-icon">✨</div><div class="t-name">ホワイトニング</div><div class="t-time">60〜90分</div></div>
+      <div class="t-card" onclick="pickTx(this,'小児歯科','30〜45分')"><div class="t-icon">👶</div><div class="t-name">小児歯科</div><div class="t-time">30〜45分</div></div>
+      <div class="t-card" onclick="pickTx(this,'その他・相談','30〜60分')"><div class="t-icon">💬</div><div class="t-name">その他・相談</div><div class="t-time">30〜60分</div></div>
+    </div>
+    <button class="btn-p" id="btnToS3" onclick="toS3()" disabled>次へ：日時を選ぶ <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    <button class="btn-s" onclick="toS1()">← 戻る</button>
+  </div>
+
+  <!-- STEP3: カレンダー -->
+  <div class="panel" id="p3">
+    <div class="ptitle">ご希望の日時を選んでください</div>
+    <div class="psub" id="calSub">〇が空き、×が予約済みです。</div>
+    <div class="cal-outer">
+      <div class="cal-nav">
+        <button class="cal-arr" onclick="chWk(-1)">&#8249;</button>
+        <span class="cal-wk" id="wkLbl"></span>
+        <button class="cal-arr" onclick="chWk(1)">&#8250;</button>
+      </div>
+      <div class="cal-wrap"><table><thead id="cHead"></thead><tbody id="cBody"></tbody></table></div>
+    </div>
+    <div class="legend">
+      <div class="leg-i"><span class="leg-circle-o"></span>空き</div>
+      <div class="leg-i"><span class="leg-circle-f">✓</span>選択中</div>
+      <div class="leg-i"><span class="leg-sym">×</span>予約済</div>
+    </div>
+    <button class="btn-s" onclick="toS2()">← 戻る</button>
+  </div>
+
+  <!-- STEP4: 確認 -->
+  <div class="panel" id="p4">
+    <div class="ptitle">予約内容の確認</div>
+    <div class="psub">内容をご確認のうえ「予約を確定する」を押してください。</div>
+    <div class="sum-card">
+      <div class="sum-row"><span class="sl">お名前</span><span class="sv" id="sName">—</span></div>
+      <div class="sum-row"><span class="sl">フリガナ</span><span class="sv" id="sKana">—</span></div>
+      <div class="sum-row"><span class="sl">電話番号</span><span class="sv" id="sPhone">—</span></div>
+      <div class="sum-row"><span class="sl">初診・再診</span><span class="sv" id="sVisit">—</span></div>
+      <div class="sum-row"><span class="sl">診察内容</span><span class="sv" id="sTx">—</span></div>
+      <div class="sum-row"><span class="sl">予約日時</span><span class="sv" id="sDt">—</span></div>
+      <div class="sum-row"><span class="sl">所要時間</span><span class="sv" id="sDur">—</span></div>
+    </div>
+    <div class="hl-box">
+      <div class="hl-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+      <div><div style="font-size:13px;font-weight:700;color:var(--mint-d)">確定後、LINEに確認メッセージを送ります</div><div style="font-size:11px;color:var(--ink3);margin-top:2px">前日にリマインドもお送りします</div></div>
+    </div>
+    <div class="info-note"><strong>キャンセル・変更</strong>は上部メニュー「変更/取消」から予約IDを入力して行えます。</div>
+    <button class="btn-p" onclick="confirmRsv()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 予約を確定する</button>
+    <button class="btn-s" onclick="toS3()">← 日時を変更する</button>
+  </div>
+
+  <!-- STEP5: 完了 -->
+  <div class="panel" id="p5">
+    <div class="done-wrap">
+      <div class="done-ic"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="done-title">ご予約が完了しました</div>
+      <div class="done-sub">LINEに予約確認メッセージをお送りしました。<br>前日にリマインドをお送りします。</div>
+      <div class="rsv-id" id="doneId">予約ID：RSV-XXXX</div>
+      <div class="sum-card" id="doneSummary"></div>
+      <button class="btn-p" onclick="resetBook()" style="margin-top:16px">新しく予約する</button>
+      <button class="btn-s" onclick="showSection('hist')">予約履歴を見る</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== CHANGE/CANCEL SECTION ========== -->
+<div id="secChange" style="display:none">
+  <div class="tabs">
+    <button class="tab active" id="tabCancel" onclick="switchTab('cancel')">キャンセル</button>
+    <button class="tab" id="tabChange" onclick="switchTab('change')">日時変更</button>
+  </div>
+
+  <!-- CANCEL TAB -->
+  <div id="tabCancelBody" class="panel active">
+    <div class="ptitle">予約のキャンセル</div>
+    <div class="psub">予約IDを入力して予約を検索してください。</div>
+    <div class="field"><label>予約ID<span class="req">必須</span></label><input type="text" id="cancelId" placeholder="例：RSV-1234" style="text-transform:uppercase"></div>
+    <button class="btn-p" onclick="lookupCancel()">予約を検索する</button>
+    <div id="cancelResult" style="margin-top:14px;display:none">
+      <div class="rsv-lookup" id="cancelCard"></div>
+      <button class="btn-danger" id="btnDoCancel" onclick="doCancel()">この予約をキャンセルする</button>
+    </div>
+  </div>
+
+  <!-- CHANGE TAB -->
+  <div id="tabChangeBody" class="panel" style="display:none">
+    <div class="ptitle">予約の日時変更</div>
+    <div class="psub">予約IDを入力して、新しい日時を選んでください。</div>
+    <div class="field"><label>予約ID<span class="req">必須</span></label><input type="text" id="changeId" placeholder="例：RSV-1234" style="text-transform:uppercase"></div>
+    <button class="btn-p" onclick="lookupChange()">予約を検索する</button>
+    <div id="changeResult" style="margin-top:14px;display:none">
+      <div class="rsv-lookup" id="changeCard"></div>
+      <div class="divider"></div>
+      <div class="ptitle" style="font-size:14px;margin-bottom:8px">新しい日時を選んでください</div>
+      <div class="cal-outer"><div class="cal-nav"><button class="cal-arr" onclick="chWk2(-1)">&#8249;</button><span class="cal-wk" id="wkLbl2"></span><button class="cal-arr" onclick="chWk2(1)">&#8250;</button></div><div class="cal-wrap"><table><thead id="cHead2"></thead><tbody id="cBody2"></tbody></table></div></div>
+      <div class="legend"><div class="leg-i"><span class="leg-circle-o"></span>空き</div><div class="leg-i"><span class="leg-circle-f">✓</span>選択中</div><div class="leg-i"><span class="leg-sym">×</span>予約済</div></div>
+      <button class="btn-p" id="btnDoChange" onclick="doChange()" disabled>日時を変更して確定する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== HISTORY SECTION ========== -->
+<div id="secHist" style="display:none">
+  <div class="panel active">
+    <div class="ptitle">予約履歴</div>
+    <div class="psub">このLINEアカウントの予約履歴です。</div>
+    <div id="histList"><div style="text-align:center;padding:30px;color:var(--ink3);font-size:13px">読み込み中...</div></div>
+  </div>
+</div>
+
+<!-- SELECTED BAR -->
+<div class="sel-bar" id="selBar">
+  <div><div class="sel-d" id="barDt">—</div><div class="sel-sub" id="barTx">—</div></div>
+  <button class="sel-go" onclick="toS4()">確認画面へ →</button>
+</div>
+<div class="sel-bar" id="selBar2">
+  <div><div class="sel-d" id="barDt2">—</div><div class="sel-sub">新しい日時</div></div>
+  <button class="sel-go" onclick="enableChangeBtn()">この日時で変更 →</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="lov" id="lov"><div class="spin"></div><div class="spin-t" id="lovTxt">読み込み中...</div></div>
+
+<script>
+// ===== CONFIG =====
+const WH_RESERVE  = 'https://n8n.exiine.com/webhook/liff-reservation';
+const WH_SLOTS    = 'https://n8n.exiine.com/webhook/get-taken-slots';
+const WH_HISTORY  = 'https://n8n.exiine.com/webhook/get-history';
+const WH_LOOKUP   = 'https://n8n.exiine.com/webhook/lookup-reservation';
+const WH_CANCEL   = 'https://n8n.exiine.com/webhook/cancel-reservation';
+const WH_CHANGE   = 'https://n8n.exiine.com/webhook/change-reservation';
+const LIFF_ID     = '2009294665-aOdrW1do';
+
+// ===== 休診日 =====
+const HOL = new Set(['2026-01-01','2026-01-12','2026-02-11','2026-02-23','2026-03-20','2026-04-29','2026-05-03','2026-05-04','2026-05-05','2026-07-20','2026-08-11','2026-09-21','2026-09-23','2026-10-12','2026-11-03','2026-11-23','2027-01-01','2027-01-11','2027-02-11','2027-02-23','2027-03-21','2027-04-29','2027-05-03','2027-05-04','2027-05-05','2027-07-19','2027-08-11','2027-09-20','2027-09-23','2027-10-11','2027-11-03','2027-11-23']);
+const SCLS = new Set([]);
+const WD = ['09:30','10:00','10:30','11:00','11:30','12:00','12:30','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30'];
+const SAT = ['09:30','10:00','10:30','11:00','11:30','12:00','12:30','14:30','15:00','15:30','16:00','16:30','17:00','17:30'];
+const DN = ['日','月','火','水','木','金','土'];
+
+function fmt(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function isCls(d){
+  const s=fmt(d),w=d.getDay();
+  if(SCLS.has(s)||HOL.has(s)||w===0) return true;
+  if(w===4){const m=new Date(d);m.setDate(d.getDate()-(d.getDay()-1));for(let i=0;i<7;i++){const x=new Date(m);x.setDate(m.getDate()+i);if(HOL.has(fmt(x)))return false;}return true;}
+  return false;
+}
+function getSlots(d){if(isCls(d))return null;return d.getDay()===6?SAT:WD;}
+function isPast(d,t){const now=new Date();const[h,m]=t.split(':').map(Number);const s=new Date(d);s.setHours(h,m,0,0);return s<=now;}
+
+// ===== STATE =====
+let uid='', wkOff=0, wkOff2=0;
+let selSlot=null, selSlot2=null;
+let tx='', dur='', taken=new Set(), taken2=new Set();
+let curSection='book', curStep=1;
+let cancelData=null, changeData=null;
+
+// ===== SECTION =====
+function showSection(s){
+  curSection=s;
+  ['book','change','hist'].forEach(x=>{
+    document.getElementById('sec'+x.charAt(0).toUpperCase()+x.slice(1)).style.display=s===x?'':'none';
+    document.getElementById('nav'+x.charAt(0).toUpperCase()+x.slice(1))?.classList.toggle('active',s===x);
+  });
+  document.getElementById('selBar').classList.remove('vis');
+  document.getElementById('selBar2').classList.remove('vis');
+  if(s==='hist') loadHist();
+  if(s==='change') { loadTaken2(); renderCal2(); }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== STEPS =====
+function setStep(n){for(let i=1;i<=4;i++){const e=document.getElementById('st'+i);e.className='step'+(i<n?' done':i===n?' active':'');}}
+function showP(n){for(let i=1;i<=5;i++){document.getElementById('p'+i).classList.toggle('active',i===n);}document.getElementById('stepsBar').style.display=n===5?'none':'';curStep=n;window.scrollTo({top:0,behavior:'smooth'});}
+
+function toS1(){showP(1);setStep(1);}
+function toS2(){
+  const nm=document.getElementById('iName').value.trim();
+  const kn=document.getElementById('iKana').value.trim();
+  const ph=document.getElementById('iPhone').value.trim();
+  if(!nm||!kn||!ph){toast('すべての必須項目を入力してください');return;}
+  showP(2);setStep(2);
+}
+function toS3(){
+  if(!tx){toast('診察内容を選択してください');return;}
+  document.getElementById('calSub').textContent=`診察内容：${tx}（${dur}）`;
+  showP(3);setStep(3);loadTaken();renderCal();
+}
+function toS4(){
+  if(!selSlot){toast('日時を選択してください');return;}
+  fillSum();showP(4);setStep(4);document.getElementById('selBar').classList.remove('vis');
+}
+function pickTx(el,n,d){document.querySelectorAll('.t-card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');tx=n;dur=d;document.getElementById('btnToS3').disabled=false;}
+
+// ===== SUMMARY =====
+function fillSum(){
+  document.getElementById('sName').textContent=document.getElementById('iName').value;
+  document.getElementById('sKana').textContent=document.getElementById('iKana').value;
+  document.getElementById('sPhone').textContent=document.getElementById('iPhone').value;
+  document.getElementById('sVisit').textContent=document.getElementById('iVisit').value;
+  document.getElementById('sTx').textContent=tx;
+  document.getElementById('sDt').textContent=selSlot.lbl;
+  document.getElementById('sDur').textContent=dur;
+}
+
+// ===== TAKEN SLOTS =====
+async function loadTaken(){
+  showLov('予約状況を確認中...');
+  try{
+    const r=await fetch(WH_SLOTS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid})});
+    const d=await r.json();
+    taken=new Set(d.takenSlots||[]);
+  }catch{
+    const t=new Date();taken=new Set([`${fmt(t)}_10:00`,`${fmt(t)}_14:30`]);
+  }finally{hideLov();renderCal();}
+}
+async function loadTaken2(){
+  try{
+    const r=await fetch(WH_SLOTS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid})});
+    const d=await r.json();
+    taken2=new Set(d.takenSlots||[]);
+  }catch{
+    const t=new Date();taken2=new Set([`${fmt(t)}_10:00`]);
+  }finally{renderCal2();}
+}
+
+// ===== CALENDAR BUILDER =====
+function mkCal(bodyId, headId, off, takenSet, selectedSlotRef, onSelect){
+  const days=getWkDays(off);
+  const s=days[0],e=days[6];
+  const wkLblId=bodyId==='cBody'?'wkLbl':'wkLbl2';
+  document.getElementById(wkLblId).textContent=
+    `${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,'0')}-${String(s.getDate()).padStart(2,'0')} 〜 ${e.getFullYear()}-${String(e.getMonth()+1).padStart(2,'0')}-${String(e.getDate()).padStart(2,'0')}`;
+
+  // 列ごとのCSSクラスを決定（日祝を休診より先に判定）
+  function colCls(d,row){
+    const dow=d.getDay(), ds=fmt(d);
+    if(dow===0||HOL.has(ds)) return `th-sun-${row}`;   // 日曜・祝日（最優先）
+    if(isCls(d))             return `th-cls-${row}`;   // 休診（木曜など）
+    if(dow===6)              return `th-sat-${row}`;   // 土曜
+    return `th-wd-${row}`;                             // 平日
+  }
+
+  const hd=document.getElementById(headId);
+  // 曜日行
+  const rowDay='<tr class="row-day"><th></th>'+days.map(d=>`<th class="${colCls(d,'day')}">${DN[d.getDay()]}</th>`).join('')+'</tr>';
+  // 日付行
+  const rowDate='<tr class="row-date"><th></th>'+days.map(d=>`<th class="${colCls(d,'dt')}">${d.getDate()}</th>`).join('')+'</tr>';
+  hd.innerHTML=rowDay+rowDate;
+
+  const bd=document.getElementById(bodyId);
+  // 全列数（時刻列＋7日分）
+  const colCount = 8;
+  bd.innerHTML=WD.map((t,idx)=>{
+    const cells=days.map(d=>{
+      const ds=fmt(d),key=`${ds}_${t}`;
+      const closed=isCls(d),slots=getSlots(d),oof=!closed&&(!slots||!slots.includes(t));
+      const isSat=d.getDay()===6;
+
+      // セル背景クラス
+      let tdCls='';
+      if(closed||oof) tdCls='cell-off';
+      else if(isSat)  tdCls='cell-on-sat';
+      else            tdCls='cell-on';
+
+      // スロット状態
+      let sc='slot', inner='', dis=false;
+      if(closed||oof){
+        return `<td class="${tdCls}"></td>`;
+      } else if(isPast(d,t)){
+        return `<td class="cell-off"></td>`;
+      } else if(selectedSlotRef&&selectedSlotRef.key===key){
+        sc+=' sl'; inner='<span class="circle">✓</span>';
+      } else if(takenSet.has(key)){
+        sc+=' tk'; inner='×'; dis=true;
+      } else {
+        sc+=' av'; inner='<span class="circle"></span>';
+      }
+      const lbl=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${DN[d.getDay()]}）${t}`;
+      return `<td class="${tdCls}"><button class="${sc}" ${dis?'disabled':''} onclick="${onSelect}('${ds}','${t}','${key}','${lbl}')">${inner}</button></td>`;
+    }).join('');
+    // 12:30の直後に区切り行を挿入
+    const breakRow = t==='12:30'
+      ? `<tr class="row-break">${'<td></td>'.repeat(colCount)}</tr>`
+      : '';
+    return `<tr><td>${t}</td>${cells}</tr>${breakRow}`;
+  }).join('');
+}
+
+function getWkDays(off){
+  const td=new Date();td.setHours(0,0,0,0);
+  const dw=td.getDay(),mn=new Date(td);
+  mn.setDate(td.getDate()-(dw===0?6:dw-1)+off*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mn);d.setDate(mn.getDate()+i);return d;});
+}
+function renderCal(){mkCal('cBody','cHead',wkOff,taken,selSlot,'onSlot');}
+function renderCal2(){mkCal('cBody2','cHead2',wkOff2,taken2,selSlot2,'onSlot2');}
+function chWk(d){if(wkOff+d<0)return;wkOff+=d;renderCal();}
+function chWk2(d){if(wkOff2+d<0)return;wkOff2+=d;renderCal2();}
+
+function onSlot(ds,t,key,lbl){
+  selSlot=selSlot&&selSlot.key===key?null:{ds,t,key,lbl};
+  const b=document.getElementById('selBar');
+  if(selSlot){document.getElementById('barDt').textContent=selSlot.lbl;document.getElementById('barTx').textContent=tx;b.classList.add('vis');toast(`${selSlot.lbl} を選択`);}
+  else b.classList.remove('vis');
+  renderCal();
+}
+function onSlot2(ds,t,key,lbl){
+  selSlot2=selSlot2&&selSlot2.key===key?null:{ds,t,key,lbl};
+  const b=document.getElementById('selBar2');
+  if(selSlot2){document.getElementById('barDt2').textContent=selSlot2.lbl;b.classList.add('vis');toast(`${selSlot2.lbl} を選択`);}
+  else b.classList.remove('vis');
+  renderCal2();
+}
+function enableChangeBtn(){document.getElementById('btnDoChange').disabled=false;document.getElementById('selBar2').classList.remove('vis');toast('日時を選択しました。下のボタンで確定してください');}
+
+// ===== CONFIRM =====
+async function confirmRsv(){
+  showLov('予約を送信中...');
+  const id='RSV-'+String(Date.now()).slice(-4);
+  const pay={userId:uid,name:document.getElementById('iName').value,kana:document.getElementById('iKana').value,phone:document.getElementById('iPhone').value,visitType:document.getElementById('iVisit').value,treatment:tx,duration:dur,datetime:selSlot.lbl,dateStr:selSlot.ds,time:selSlot.t,reservationId:id};
+  try{await fetch(WH_RESERVE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pay)});}catch{}
+  hideLov();
+  document.getElementById('doneId').textContent=`予約ID：${id}`;
+  document.getElementById('doneSummary').innerHTML=`<div class="sum-row"><span class="sl">日時</span><span class="sv">${pay.datetime}</span></div><div class="sum-row"><span class="sl">診察内容</span><span class="sv">${pay.treatment}</span></div><div class="sum-row"><span class="sl">お名前</span><span class="sv">${pay.name} 様</span></div>`;
+  showP(5);
+}
+
+// ===== CANCEL =====
+async function lookupCancel(){
+  const rid=document.getElementById('cancelId').value.trim().toUpperCase();
+  if(!rid){toast('予約IDを入力してください');return;}
+  showLov('予約を検索中...');
+  try{
+    const r=await fetch(WH_LOOKUP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reservationId:rid,userId:uid})});
+    cancelData=await r.json();
+  }catch{
+    // デモ用フォールバック
+    cancelData={reservationId:rid,datetime:'2026年3月20日（金）10:00',treatment:'定期検診・クリーニング',name:'山田 太郎',status:'confirmed'};
+  }
+  hideLov();
+  const el=document.getElementById('cancelCard');
+  if(!cancelData||cancelData.error){el.innerHTML='<div style="color:var(--red);font-size:13px">予約が見つかりませんでした</div>';document.getElementById('cancelResult').style.display='block';document.getElementById('btnDoCancel').style.display='none';return;}
+  const stCls=cancelData.status==='confirmed'?'sb-ok':cancelData.status==='cancelled'?'sb-cancel':'sb-done';
+  const stLbl=cancelData.status==='confirmed'?'予約確定':cancelData.status==='cancelled'?'キャンセル済':'完了';
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:14px;font-weight:700">${cancelData.reservationId}</div><span class="status-badge ${stCls}">${stLbl}</span></div><div class="sum-row"><span class="sl">日時</span><span class="sv">${cancelData.datetime}</span></div><div class="sum-row"><span class="sl">診察内容</span><span class="sv">${cancelData.treatment}</span></div><div class="sum-row"><span class="sl">お名前</span><span class="sv">${cancelData.name} 様</span></div>`;
+  document.getElementById('cancelResult').style.display='block';
+  document.getElementById('btnDoCancel').style.display=cancelData.status==='confirmed'?'block':'none';
+}
+async function doCancel(){
+  if(!cancelData){return;}
+  if(!confirm(`${cancelData.datetime} の予約をキャンセルしますか？`)) return;
+  showLov('キャンセル処理中...');
+  try{await fetch(WH_CANCEL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reservationId:cancelData.reservationId,userId:uid})});}catch{}
+  hideLov();toast('予約をキャンセルしました');
+  document.getElementById('cancelResult').style.display='none';
+  document.getElementById('cancelId').value='';
+  cancelData=null;
+}
+
+// ===== CHANGE =====
+async function lookupChange(){
+  const rid=document.getElementById('changeId').value.trim().toUpperCase();
+  if(!rid){toast('予約IDを入力してください');return;}
+  showLov('予約を検索中...');
+  try{
+    const r=await fetch(WH_LOOKUP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reservationId:rid,userId:uid})});
+    changeData=await r.json();
+  }catch{
+    changeData={reservationId:rid,datetime:'2026年3月20日（金）10:00',treatment:'定期検診・クリーニング',name:'山田 太郎',status:'confirmed'};
+  }
+  hideLov();
+  const el=document.getElementById('changeCard');
+  if(!changeData||changeData.error){el.innerHTML='<div style="color:var(--red);font-size:13px">予約が見つかりませんでした</div>';document.getElementById('changeResult').style.display='block';return;}
+  el.innerHTML=`<div style="font-size:12px;color:var(--ink3);margin-bottom:6px">現在の予約</div><div class="sum-row"><span class="sl">日時</span><span class="sv">${changeData.datetime}</span></div><div class="sum-row"><span class="sl">診察内容</span><span class="sv">${changeData.treatment}</span></div>`;
+  document.getElementById('changeResult').style.display='block';
+  selSlot2=null; wkOff2=0; loadTaken2(); renderCal2();
+}
+async function doChange(){
+  if(!changeData||!selSlot2){toast('新しい日時を選択してください');return;}
+  showLov('日時を変更中...');
+  try{await fetch(WH_CHANGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reservationId:changeData.reservationId,userId:uid,newDatetime:selSlot2.lbl,newDateStr:selSlot2.ds,newTime:selSlot2.t})});}catch{}
+  hideLov();
+  toast('日時を変更しました');
+  document.getElementById('changeResult').style.display='none';
+  document.getElementById('changeId').value='';
+  changeData=null; selSlot2=null;
+}
+
+// ===== HISTORY =====
+async function loadHist(){
+  const el=document.getElementById('histList');
+  el.innerHTML='<div style="text-align:center;padding:30px;color:var(--ink3);font-size:13px">読み込み中...</div>';
+  let items=[];
+  try{
+    const r=await fetch(WH_HISTORY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:uid})});
+    const d=await r.json();
+    items=d.history||[];
+  }catch{
+    // デモ用
+    items=[
+      {reservationId:'RSV-0042',datetime:'2026年3月20日（金）10:00',treatment:'定期検診・クリーニング',status:'confirmed'},
+      {reservationId:'RSV-0038',datetime:'2026年2月10日（火）15:00',treatment:'虫歯の治療',status:'done'},
+      {reservationId:'RSV-0031',datetime:'2026年1月15日（木）11:00',treatment:'ホワイトニング',status:'cancelled'},
+    ];
+  }
+  if(!items.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--ink3);font-size:13px">予約履歴がありません</div>';return;}
+  const stMap={confirmed:{cls:'ok',lbl:'確定中'},done:{cls:'dn',lbl:'完了'},cancelled:{cls:'cx',lbl:'キャンセル'}};
+  el.innerHTML=items.map(i=>{
+    const st=stMap[i.status]||{cls:'dn',lbl:i.status};
+    const bdg=i.status==='confirmed'?'sb-ok':i.status==='cancelled'?'sb-cancel':'';
+    return `<div class="hist-item"><div class="hist-dot ${st.cls}"></div><div class="hist-body"><div class="hist-date">${i.datetime}</div><div class="hist-treat">${i.treatment}</div><div class="hist-rsv">${i.reservationId}</div></div><span class="status-badge ${bdg}" style="${!bdg?'background:#F0F0F0;color:#999;':''}">${st.lbl}</span></div>`;
+  }).join('');
+}
+
+// ===== CANCEL/CHANGE TAB =====
+function switchTab(t){
+  ['cancel','change'].forEach(x=>{
+    document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active',x===t);
+    document.getElementById('tab'+x.charAt(0).toUpperCase()+x.slice(1)+'Body').style.display=x===t?'block':'none';
+  });
+  document.getElementById('selBar2').classList.remove('vis');
+}
+
+// ===== RESET =====
+function resetBook(){
+  selSlot=null;tx='';dur='';wkOff=0;
+  ['iName','iKana','iPhone'].forEach(id=>document.getElementById(id).value='');
+  document.querySelectorAll('.t-card').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('btnToS3').disabled=true;
+  document.getElementById('selBar').classList.remove('vis');
+  showP(1);setStep(1);
+  document.getElementById('stepsBar').style.display='';
+}
+
+// ===== LOADING/TOAST =====
+function showLov(t){document.getElementById('lovTxt').textContent=t;document.getElementById('lov').classList.add('show');}
+function hideLov(){document.getElementById('lov').classList.remove('show');}
+let _tt;
+function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>e.classList.remove('show'),2500);}
+
+// ===== LIFF =====
+async function initLiff(){
+  if(!window.liff)return;
+  try{
+    await liff.init({liffId:LIFF_ID});
+    if(!liff.isLoggedIn()){liff.login();return;}
+    const p=await liff.getProfile();
+    uid=p.userId||'';
+  }catch(e){console.warn('LIFF:',e);}
+}
+
+// ===== INIT =====
+renderCal();
+initLiff();
+</script>
+</body>
+</html>
